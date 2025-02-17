@@ -39,6 +39,21 @@ def process_image(image: Image.Image) -> Image.Image:
     # merge both red and green masks into one image
     res = cv2.bitwise_or(res_red, res_green)
     
+    # find contours in the mask and draw rectangles around the apples
+    gray_res = cv2.cvtColor(res, cv2.COLOR_HSV2RGB)
+    gray_res = cv2.cvtColor(gray_res, cv2.COLOR_RGB2GRAY)
+    contours, _ = cv2.findContours(
+        gray_res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    c_num = 0
+    for contour in contours:
+        if cv2.contourArea(contour) < 500:
+            continue
+        x, y, w, h = cv2.boundingRect(contour)
+        c_num += 1
+        cv2.rectangle(res, (x, y), (x+w, y+h), (50,200,200), 2)
+        cv2.putText(res, "#{}".format(c_num), (int(x) - 10, int(y)), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50,100,100), 2)
+
     # convert image back to RGB
     image = cv2.cvtColor(res, cv2.COLOR_HSV2RGB)
 
