@@ -21,24 +21,35 @@ def process_image(image: Image.Image) -> Image.Image:
     # define range of red color in HSV
     lower_red = np.array([0,50,50])
     upper_red = np.array([10,255,255])
+    # also detect red color in the upper range
+    lower_red2 = np.array([170,50,50])
+    upper_red2 = np.array([180,255,255])
 
     # define range of green color in HSV
-    lower_green = np.array([50,100,100])
+    lower_green = np.array([30,100,100])
     upper_green = np.array([70,255,255])
 
     # Threshold the HSV image to get only red colors
     mask_red = cv2.inRange(hsv, lower_red, upper_red)
+    mask_red2 = cv2.inRange(hsv, lower_red2, upper_red2)
 
     # Threshold the HSV image to get only green colors
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
     # Bitwise-AND mask and original image
     res_red = cv2.bitwise_and(hsv,hsv, mask= mask_red)
+    res_red2 = cv2.bitwise_and(hsv,hsv, mask= mask_red2)
     res_green = cv2.bitwise_and(hsv,hsv, mask= mask_green)
 
     # merge both red and green masks into one image
-    res = cv2.bitwise_or(res_red, res_green)
+    res = cv2.add(res_red, res_red2)
+    res = cv2.add(res, res_green)
     
+    # apply morphological operations to remove noise
+    kernel = np.ones((5,5),np.uint8)
+    res = cv2.morphologyEx(res, cv2.MORPH_OPEN, kernel) # remove noise
+    res = cv2.morphologyEx(res, cv2.MORPH_CLOSE, kernel) # fill in the holes
+
     # find contours in the mask and draw rectangles around the apples
     gray_res = cv2.cvtColor(res, cv2.COLOR_HSV2RGB)
     gray_res = cv2.cvtColor(gray_res, cv2.COLOR_RGB2GRAY)
