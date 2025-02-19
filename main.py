@@ -16,11 +16,13 @@ def process_image(image: Image.Image) -> Image.Image:
     # convert image to HSV
     # image = image.convert('HSV')
 
+    # convert image to numpy array
+    original = np.array(image)
     hsv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2HSV)
 
     # define range of red color in HSV
     lower_red = np.array([0,50,50])
-    upper_red = np.array([10,255,255])
+    upper_red = np.array([16,255,255])
     # also detect red color in the upper range
     lower_red2 = np.array([170,50,50])
     upper_red2 = np.array([180,255,255])
@@ -53,6 +55,19 @@ def process_image(image: Image.Image) -> Image.Image:
     # find contours in the mask and draw rectangles around the apples
     gray_res = cv2.cvtColor(res, cv2.COLOR_HSV2RGB)
     gray_res = cv2.cvtColor(gray_res, cv2.COLOR_RGB2GRAY)
+
+    blurred = cv2.GaussianBlur(gray_res, (5, 5), 0)
+    _, thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)
+
+    # apply Hough Circle Transform
+    circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1.2, minDist=150, param1=40, param2=50, minRadius=30, maxRadius=150)
+
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            cv2.circle(res, (x, y), r, (120, 100, 255), 4)
+            # cv2.rectangle(res, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+
     contours, _ = cv2.findContours(
         gray_res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     c_num = 0
