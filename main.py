@@ -64,24 +64,28 @@ def process_image(image: Image.Image) -> Image.Image:
 
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
+        c_num = 0
         for (x, y, r) in circles:
-            cv2.circle(res, (x, y), r, (120, 100, 255), 4)
-            # cv2.rectangle(res, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            c_num += 1
+            cv2.circle(hsv, (x, y), r, (120, 100, 255), 4)
+            # cv2.rectangle(hsv, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
+            cv2.putText(hsv, "#{}".format(c_num), (int(x) - 10, int(y)), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50,100,255), 2)
 
     contours, _ = cv2.findContours(
         gray_res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     c_num = 0
     for contour in contours:
-        if cv2.contourArea(contour) < 500:
+        if cv2.contourArea(contour) < 1000:
             continue
         x, y, w, h = cv2.boundingRect(contour)
         c_num += 1
-        cv2.rectangle(res, (x, y), (x+w, y+h), (50,200,200), 2)
-        cv2.putText(res, "#{}".format(c_num), (int(x) - 10, int(y)), 
+        cv2.rectangle(hsv, (x, y), (x+w, y+h), (50,200,200), 2)
+        cv2.putText(hsv, "#{}".format(c_num), (int(x) - 10, int(y)), 
             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (50,100,100), 2)
 
     # convert image back to RGB
-    image = cv2.cvtColor(res, cv2.COLOR_HSV2RGB)
+    image = cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
 
     # convert numpy array to PIL image
     image = Image.fromarray(image)
